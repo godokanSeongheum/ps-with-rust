@@ -1,6 +1,6 @@
 use std::{io::{self, Read}, str::from_utf8};
 use std::fmt::Debug;
-// beakjoon 9663 N-Queen
+// beakjoon 2580 스도쿠
 #[derive(Debug)]
 struct Memo {
     map: [usize;81],
