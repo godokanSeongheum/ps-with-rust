@@ -1,42 +1,38 @@
 use std::io;
 // beakjoon 9663 N-Queen
 
-fn get_queens(n: usize, depth: usize, map: &Vec<Vec<bool>>) -> usize {
-    let mut answer = 0;
-    if depth + 1 == n {
-        return map[depth].iter().filter(|&x| *x).count();
-    }
-    if map[depth].iter().filter(|&x| *x).count() == 0 {
-        return 0;
-    }
-    for i in 0..n {
-        if !map[depth][i] {
-            continue;
-        }
-        let mut new_branch = map.clone();
-        // vertical
-        for j in depth + 1..n {
-            new_branch[j][i] = false;
-        }
-        // diagonals
-        let lesser1 = i.min(n - depth -1);
-        let lesser2 = (n - i - 1).min(n - depth - 1);
-        for q in 1..=lesser1 {
-            new_branch[depth + q][i - q] = false;
-        }
-        for q in 1..=lesser2 {
-            new_branch[depth + q][i + q] = false;
-        }
-        answer += get_queens(n, depth + 1, &new_branch);
-    }
-    return answer;
-}
 fn main() {
     let n: usize = {
         let mut input = String::new();
         io::stdin().read_line(&mut input).unwrap();
         input.trim().parse().unwrap()
     };
-    let map: Vec<Vec<bool>> = vec![vec![true; n]; n];
-    println!("{}", get_queens(n, 0, &map));
+    let map: Vec<isize> = vec![-1; n];
+    fn get_queens(map: &Vec<isize>, depth: usize) -> usize {
+        let n = map.len();
+        if depth == n {
+            return if map[n - 1] == -1 as isize {0} else {1};
+        }
+        let mut answer = 0;
+        for i in 0..n {
+            let mut good_to_go = true;
+            for j in 0..depth {
+                if map[j] == i as isize {
+                    good_to_go = false;    // vertical
+                    break;
+                }
+                if (depth - j) as isize == (map[j] - i as isize).abs() { // diagonal
+                    good_to_go = false;
+                    break;
+                }
+            }
+            if good_to_go {
+                let mut new_branch = map.clone();
+                new_branch[depth] = i as isize;
+                answer += get_queens(&new_branch, depth + 1);
+            }
+        }
+        return answer;
+    }
+    println!("{}", get_queens(&map, 0));
 }
