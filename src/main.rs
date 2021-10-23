@@ -1,40 +1,42 @@
-use std::{io::{self, BufWriter, Read, Write}, str::from_utf8};
-use std::os::unix::io::FromRawFd;
-use std::fs::File;
-// beakjoon 15652
-fn permute(
-    start: usize, 
-    n: usize,
-    m: usize,
-    output: &mut Vec<u8>,
-    tmparr:&Vec<usize>,
-) -> () {
-    if m == 0 {
-        let chunk = tmparr.iter().map(|x| x.to_string())
-            .collect::<Vec<String>>().join(" ");
-        write!(output, "{}\n", chunk).unwrap();
-        return;
+use std::io;
+// beakjoon 9663 N-Queen
+
+fn get_queens(n: usize, depth: usize, map: &Vec<Vec<bool>>) -> usize {
+    let mut answer = 0;
+    if depth + 1 == n {
+        return map[depth].iter().filter(|&x| *x).count();
     }
-    for num in start..=n {
-        let mut next_tmparr = tmparr.clone();
-        next_tmparr.push(num);
-        permute(num, n, m - 1, output, &next_tmparr);
+    if map[depth].iter().filter(|&x| *x).count() == 0 {
+        return 0;
     }
-    return;
+    for i in 0..n {
+        if !map[depth][i] {
+            continue;
+        }
+        let mut new_branch = map.clone();
+        // vertical
+        for j in depth + 1..n {
+            new_branch[j][i] = false;
+        }
+        // diagonals
+        let lesser1 = i.min(n - depth -1);
+        let lesser2 = (n - i - 1).min(n - depth - 1);
+        for q in 1..=lesser1 {
+            new_branch[depth + q][i - q] = false;
+        }
+        for q in 1..=lesser2 {
+            new_branch[depth + q][i + q] = false;
+        }
+        answer += get_queens(n, depth + 1, &new_branch);
+    }
+    return answer;
 }
 fn main() {
-    let nm: Vec<usize> = {
-        let mut input = Vec::new();
-        io::stdin().read_to_end(&mut input).unwrap();
-        from_utf8(&input).unwrap().split_whitespace()
-            .map(|x| x.parse().unwrap()).collect()
+    let n: usize = {
+        let mut input = String::new();
+        io::stdin().read_line(&mut input).unwrap();
+        input.trim().parse().unwrap()
     };
-    let n = nm[0];
-    let m = nm[1];
-    let mut output = Vec::new();
-    let mut writer = BufWriter::new(unsafe {File::from_raw_fd(1)});
-    let v = Vec::new();
-    permute(1, n, m, &mut output, &v);
-    drop(nm);
-    writer.write_all(&output).unwrap();
+    let map: Vec<Vec<bool>> = vec![vec![true; n]; n];
+    println!("{}", get_queens(n, 0, &map));
 }
