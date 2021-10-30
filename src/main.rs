@@ -1,87 +1,65 @@
-use std::{io::{self, Read}, str::from_utf8};
-// beakjoon 14889 스타트와 링크
-
-fn set_min_val(tmp: usize, min_val: &mut usize, other: usize) {
-    let difference = (other  as isize - tmp as isize).abs();
-    if  difference < *min_val as isize {
-        *min_val = difference as usize;
-    }
-    return;
+use std::{collections::HashMap, fs::File, io::{self, Read, Write, BufWriter}, os::unix::io::FromRawFd, str::from_utf8};
+#[derive(Debug)]
+struct Counter {
+    zero: usize,
+    one: usize,
 }
 
-fn join_team(idx: usize, synergies: &Vec<Vec<usize>>, tmp: usize, plate: &mut Vec<usize>) -> usize {
-    let mut new_tmp = tmp;
-    for &teammate in plate.iter() {
-        new_tmp = new_tmp + synergies[idx][teammate] + synergies[teammate][idx];
+fn fibo(n: usize, memo: &mut HashMap<usize, Counter>) -> Counter {
+    if n == 0 {
+        return Counter {zero: 1, one: 0};
     }
-    plate.push(idx);
-    new_tmp
-}
-
-fn get_opposite_team_score(synergies: &Vec<Vec<usize>>, plate: &Vec<usize>) -> usize {
-    let mut score = 0;
-    for i in 0..synergies.len() - 1 {
-        if plate.contains(&i) {
-            continue;
-        }
-        for j in i + 1..synergies.len() {
-            if plate.contains(&j) {
-                continue;
-            }
-            score = score + synergies[i][j] + synergies[j][i];
-        }
+    if n == 1 {
+        return Counter {zero: 0, one: 1};
     }
-    score
-}
-fn solve(
-    min_val: &mut usize,
-    left: usize,
-    synergies: &Vec<Vec<usize>>,
-    tmp: usize,
-    cur_idx: usize,
-    plate: &mut Vec<usize>) {
-    if left == 0 {
-        let other = get_opposite_team_score(synergies, plate);
-        set_min_val(tmp, min_val, other);
-        return;
-    }
-    let mut tmp = tmp;
-    if synergies.len() as isize - cur_idx as isize == left as isize {
-        for idx in cur_idx..synergies.len() {
-            tmp = join_team(idx, synergies, tmp, plate);
-        }
-        let other = get_opposite_team_score(synergies, plate);
-        set_min_val(tmp, min_val, other);
-        for _ in cur_idx..synergies.len() {
-            plate.pop();
-        }
-        return;
-    }
-
-    for i in cur_idx..synergies.len() {
-        let new_tmp = join_team(i, synergies, tmp, plate);
-        solve(min_val, left - 1, synergies, new_tmp, i + 1, plate);
-        plate.pop();
-    }
-    return;
-}
-
-fn main() {
-    let (n, synergies): (usize, Vec<Vec<usize>>) = {
-        let mut stdinput = Vec::new();
-        io::stdin().read_to_end(&mut stdinput).unwrap();
-        let stdinput: Vec<usize> = from_utf8(&stdinput).unwrap().trim()
-            .split_whitespace()
-            .map(|x| x.parse().unwrap()).collect();
-        let mut synergies = vec![];
-        for chunk in stdinput[1..].chunks(stdinput[0]) {
-            synergies.push(chunk.to_vec());
-        }
-        (stdinput[0], synergies)
+    let counter1 = match memo.get(&(n - 1)) {
+        Some(val) => {
+            Counter {zero: val.zero, one: val.one}
+        },
+        None => {
+            let counter = fibo(n - 1, memo);
+            memo.insert(n - 1, Counter { zero: counter.zero, one: counter.one});
+            counter
+        },
     };
-
-    let mut min_val = isize::MAX as usize;
-    let mut plate: Vec<usize> = Vec::new();
-    solve(&mut min_val, n / 2, &synergies, 0, 0, &mut plate);
-    println!("{}", min_val);
+    let counter2 = match memo.get(&(n - 2)) {
+        Some(val) => {
+            Counter {zero: val.zero, one: val.one}
+        },
+        None => {
+            let counter = fibo(n - 2, memo);
+            memo.insert(n - 2, Counter { zero: counter.zero, one: counter.one});
+            counter
+        },
+    };
+    Counter {zero: counter1.zero + counter2.zero, one: counter1.one + counter2.one}
+}
+fn main() {
+    let mut buf_writer = BufWriter::new(unsafe { File::from_raw_fd(1) });
+    let nums: Vec<usize> = {
+        let mut input = Vec::new();
+        io::stdin().read_to_end(&mut input).unwrap();
+        from_utf8(&input).unwrap().split_whitespace().skip(1)
+            .map(|x| x.parse().unwrap())
+            .collect()
+    };
+    let mut output = Vec::new();
+    let mut counter = Counter { zero: 0, one: 0, };
+    let mut memo: HashMap<usize, Counter> = HashMap::new();
+    for &num in nums.iter() {
+        match memo.get(&num) {
+            Some(val) => {
+                counter.zero += val.zero;
+                counter.one += val.one; 
+            },
+            None => {
+                counter = fibo(num, &mut memo)
+            },
+        }
+        memo.insert(num, Counter { zero: counter.zero, one: counter.one});
+        write!(output, "{} {}\n", counter.zero, counter.one).unwrap();
+        counter.zero = 0;
+        counter.one = 0;
+    }
+    buf_writer.write_all(&output).unwrap();
 }
