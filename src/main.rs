@@ -1,65 +1,65 @@
-use std::{collections::HashMap, fs::File, io::{self, Read, Write, BufWriter}, os::unix::io::FromRawFd, str::from_utf8};
-#[derive(Debug)]
-struct Counter {
-    zero: usize,
-    one: usize,
+// beakjoon 9184 신나는 함수 실행
+use std::{
+    io::Read,
+    str::from_utf8,
+    collections::HashMap
+};
+
+type TestCase = (isize, isize, isize);
+
+fn resolve_testcase(testcase: &[isize]) -> TestCase {
+    (testcase[0], testcase[1], testcase[2])
 }
 
-fn fibo(n: usize, memo: &mut HashMap<usize, Counter>) -> Counter {
-    if n == 0 {
-        return Counter {zero: 1, one: 0};
-    }
-    if n == 1 {
-        return Counter {zero: 0, one: 1};
-    }
-    let counter1 = match memo.get(&(n - 1)) {
-        Some(val) => {
-            Counter {zero: val.zero, one: val.one}
-        },
+fn create_key(testcase: TestCase) -> String {
+    format!("{} {} {}", testcase.0, testcase.1, testcase.2)
+}
+
+fn get_answer(testcase: TestCase, memo: &mut HashMap<String, isize>) -> isize {
+    let key = create_key(testcase);
+    match memo.get(&key) {
+        Some(&n) => n,
         None => {
-            let counter = fibo(n - 1, memo);
-            memo.insert(n - 1, Counter { zero: counter.zero, one: counter.one});
-            counter
+            let answer = solve(testcase, memo);
+            memo.insert(key, answer);
+            answer
         },
-    };
-    let counter2 = match memo.get(&(n - 2)) {
-        Some(val) => {
-            Counter {zero: val.zero, one: val.one}
-        },
-        None => {
-            let counter = fibo(n - 2, memo);
-            memo.insert(n - 2, Counter { zero: counter.zero, one: counter.one});
-            counter
-        },
-    };
-    Counter {zero: counter1.zero + counter2.zero, one: counter1.one + counter2.one}
+    }
+}
+
+fn solve(testcase: TestCase, memo: &mut HashMap<String, isize>) -> isize {
+    let (a, b, c) = testcase;
+    if a <= 0 || b <= 0 || c <= 0 {
+        return 1;
+    }
+    if a > 20 || b > 20 || c > 20 {
+        return get_answer((20, 20, 20), memo);
+    }
+    if a < b && b < c{
+        return get_answer((a, b, c - 1), memo) + 
+            get_answer((a, b - 1, c - 1), memo) -
+            get_answer((a, b - 1, c), memo);
+    } 
+    return get_answer((a - 1, b, c), memo) + 
+        get_answer((a - 1, b - 1, c), memo) +
+        get_answer((a - 1, b, c - 1), memo) -
+        get_answer((a - 1, b - 1, c - 1), memo);
 }
 fn main() {
-    let mut buf_writer = BufWriter::new(unsafe { File::from_raw_fd(1) });
-    let nums: Vec<usize> = {
+    use std::io;
+    let inputs: Vec<isize> = {
         let mut input = Vec::new();
         io::stdin().read_to_end(&mut input).unwrap();
-        from_utf8(&input).unwrap().split_whitespace().skip(1)
-            .map(|x| x.parse().unwrap())
-            .collect()
+        from_utf8(&input).unwrap().trim().split_whitespace()
+            .map(|x| x.parse().unwrap()).collect()
     };
-    let mut output = Vec::new();
-    let mut counter = Counter { zero: 0, one: 0, };
-    let mut memo: HashMap<usize, Counter> = HashMap::new();
-    for &num in nums.iter() {
-        match memo.get(&num) {
-            Some(val) => {
-                counter.zero += val.zero;
-                counter.one += val.one; 
-            },
-            None => {
-                counter = fibo(num, &mut memo)
-            },
-        }
-        memo.insert(num, Counter { zero: counter.zero, one: counter.one});
-        write!(output, "{} {}\n", counter.zero, counter.one).unwrap();
-        counter.zero = 0;
-        counter.one = 0;
+    let mut memo: HashMap<String, isize> = HashMap::new();
+    for testcase in inputs[..inputs.len() - 3].chunks(3) {
+        let (a, b, c) = resolve_testcase(&testcase);
+        let answer = match memo.get(create_key((a, b, c)).as_str()) {
+            Some(&n) => n,
+            None => solve((a, b, c), &mut memo),
+        };
+        println!("w({}, {}, {}) = {}", a, b, c, answer);
     }
-    buf_writer.write_all(&output).unwrap();
 }
