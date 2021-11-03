@@ -1,43 +1,34 @@
-// beakjoon 1149 RGB 거리
+// beakjoon 1932 정수 삼각형
 use std::{
     io::{self, Read, Write, BufWriter},
     str::from_utf8,
     os::unix::io::FromRawFd,
     fs::File
 };
-
-#[derive(Clone)]
-struct MinRGB {
-    red_min: usize,
-    green_min: usize,
-    blue_min: usize,
-}
-
-fn solve(
-    line: &[usize],
-    result: &mut MinRGB) -> () {
-    if let [r, g, b] = line[..3] {
-        let tmp = result.clone();
-        result.red_min = r + tmp.blue_min.min(tmp.green_min);
-        result.green_min = g + tmp.red_min.min(tmp.blue_min);
-        result.blue_min = b + tmp.red_min.min(tmp.green_min);
-    };
-}
 fn main() {
     let mut writer = BufWriter::new(unsafe {File::from_raw_fd(1)});
-    let inputs: Vec<usize> = {
+    let inputs: Vec<Vec<usize>> = {
         let mut input = Vec::new();
         io::stdin().read_to_end(&mut input).unwrap();
-        from_utf8(&input).unwrap().trim().split_whitespace()
+        from_utf8(&input).unwrap().trim().split("\n")
             .skip(1)
-            .map(|x| x.parse().unwrap()).collect()
+            .map(|x| {
+                x.trim().split_whitespace()
+                    .map(|y| y.parse().unwrap())
+                    .collect()
+            })
+            .collect()
     };
     let mut output = Vec::new();
-    let mut result: MinRGB = MinRGB { red_min: 0, blue_min: 0, green_min: 0};
-    for line in inputs.chunks(3) {
-        solve(line, &mut result);
+    let mut arr: [[usize;500];500] = [[10000;500];500];
+    for (idx, &val) in inputs[inputs.len() - 1].iter().enumerate() {
+        arr[0][idx] = val;
     }
-    write!(output, "{}", result.red_min.min(
-        result.blue_min).min(result.green_min)).unwrap();
+    for (idx,line) in inputs.iter().rev().skip(1).enumerate() {
+        for (i, &v) in line.iter().enumerate() {
+            arr[idx + 1][i] = arr[idx][i].max(arr[idx][i + 1]) + v;
+        }
+    }
+    write!(output, "{}", arr[inputs.len() - 1][0]).unwrap();
     writer.write_all(&output).unwrap();
 }
