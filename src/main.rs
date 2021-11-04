@@ -1,37 +1,36 @@
-// beakjoon 2579 계단 오르기
+// beakjoon 1463 1로 만들기
 use std::{
-    io::{self, Read, Write, BufWriter},
-    str::from_utf8,
+    io::{self, Write, BufWriter},
     os::unix::io::FromRawFd,
     fs::File
 };
 fn main() {
     let mut writer = BufWriter::new(unsafe {File::from_raw_fd(1)});
-    let inputs: Vec<usize> = {
-        let mut input = Vec::new();
-        io::stdin().read_to_end(&mut input).unwrap();
-        from_utf8(&input).unwrap().trim().split_whitespace()
-            .skip(1)
-            .map(|x| x.parse().unwrap())
-            .collect()
+    let x: usize = {
+        let mut input = String::new();
+        io::stdin().read_line(&mut input).unwrap();
+        input.trim().parse().unwrap()
     };
-    let mut memo: [(usize, usize);300] = [(0, 0);300];
     let mut output = Vec::new();
-    for (idx, &num) in inputs.iter().enumerate() {
-        if idx == 0 {
-            memo[0] = (num, 0);
+    let mut table: [usize;1_000_001] = [0;1_000_001];
+    table[2] = 1;
+    table[3] = 1;
+    for i in 4..1_000_001 {
+        if i % 2 == 0 && i % 3 == 0 {
+            table[i] = table[i / 2].min(table[i / 3]).min(table[i - 1]) + 1;
             continue;
         }
-        if idx == 1 {
-            memo[1] = (memo[0].0 + num, num);
+        if i % 3 == 0 {
+            table[i] = table[i / 3].min(table[i - 1]) + 1;
             continue;
         }
-        memo[idx] = (
-            memo[idx - 1].1 + num,
-            memo[idx - 2].0.max(memo[idx - 2].1) + num
-        );
+        if i % 2 == 0 {
+            table[i] = table[i / 2].min(table[i - 1]) + 1;
+            continue;
+        }
+        table[i] = table[i - 1] + 1;
     }
-    let result = memo[inputs.len() - 1].0.max(memo[inputs.len() - 1].1);
-    write!(output, "{}", result).unwrap();
+
+    write!(output, "{:?}", table[x]).unwrap();
     writer.write_all(&output).unwrap();
 }
