@@ -1,4 +1,4 @@
-// baekjoon 2156 포도주 시식
+// baekjoon 11053 가장 긴 증가하는 부분 수열
 use std::{fs::File, io::{self, Read, Write, BufWriter}, os::unix::io::FromRawFd, str::from_utf8};
 fn main() {
     let mut writer = BufWriter::new(unsafe {File::from_raw_fd(1)});
@@ -9,22 +9,18 @@ fn main() {
             .skip(1).map(|x| x.parse().unwrap())
             .collect()
     };
-    let bigger = |(a, b, c): (usize, usize, usize)| -> usize {
-        a.max(b).max(c)
-    };
     let mut output = Vec::new();
-    let mut main_memo: (usize, usize, usize) = (0, 0, 0);
-    let mut sub_memo: (usize, usize, usize) = (0, 0, 0);
-
-    for &v in inputs.iter() {
-        if v == 0 {
-            let max_val = bigger(sub_memo);
-            main_memo = (max_val, max_val, max_val);
-        } else {
-            main_memo = (sub_memo.1 + v, sub_memo.2 + v, bigger(sub_memo));
+    let mut memo: [usize;1000] = [0;1000];
+    for i in 0..inputs.len() {
+        let max_val_idx = inputs[0..i].iter().enumerate()
+            .filter(|(_, &v)| v < inputs[i])
+            .map(|(idx, _)| idx)
+            .reduce(|a, b| if memo[a] > memo[b] {a} else {b});
+        match max_val_idx {
+            Some(idx) => memo[i] = memo[idx] + 1,
+            None => memo[i] = 1,
         }
-        sub_memo = main_memo;
     }
-    write!(output, "{}", bigger(main_memo)).unwrap();
+    write!(output, "{}", memo.iter().max().unwrap()).unwrap();
     writer.write_all(&output).unwrap();
 }
