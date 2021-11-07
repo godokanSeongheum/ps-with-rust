@@ -1,27 +1,30 @@
-// beakjoon 10844 쉬운 계단 수
-use std::{
-    io::{self, Write, BufWriter},
-    os::unix::io::FromRawFd,
-    fs::File
-};
+// baekjoon 2156 포도주 시식
+use std::{fs::File, io::{self, Read, Write, BufWriter}, os::unix::io::FromRawFd, str::from_utf8};
 fn main() {
     let mut writer = BufWriter::new(unsafe {File::from_raw_fd(1)});
-    let n: usize = {
-        let mut input = String::new();
-        io::stdin().read_line(&mut input).unwrap();
-        input.trim().parse::<usize>().unwrap() - 1
+    let inputs: Vec<usize>  = {
+        let mut input = Vec::new();
+        io::stdin().read_to_end(&mut input).unwrap();
+        from_utf8(&input).unwrap().trim().split_whitespace()
+            .skip(1).map(|x| x.parse().unwrap())
+            .collect()
+    };
+    let bigger = |(a, b, c): (usize, usize, usize)| -> usize {
+        a.max(b).max(c)
     };
     let mut output = Vec::new();
-    let mut table: [[u64;10];100] = [[0;10];100]; 
-    table[0] = [0, 1, 1, 1, 1, 1, 1, 1, 1, 1];
-    for i in 1..=n {
-        table[i][0] = table[i - 1][1];
-        table[i][9] = table[i - 1][8];
-        for digit in 1..9 {
-            table[i][digit] = (table[i - 1][digit - 1] + table[i - 1][digit + 1]) %
-                                                1_000_000_000;
+    let mut main_memo: (usize, usize, usize) = (0, 0, 0);
+    let mut sub_memo: (usize, usize, usize) = (0, 0, 0);
+
+    for &v in inputs.iter() {
+        if v == 0 {
+            let max_val = bigger(sub_memo);
+            main_memo = (max_val, max_val, max_val);
+        } else {
+            main_memo = (sub_memo.1 + v, sub_memo.2 + v, bigger(sub_memo));
         }
+        sub_memo = main_memo;
     }
-    write!(output, "{}", table[n].iter().sum::<u64>() % 1_000_000_000).unwrap();
+    write!(output, "{}", bigger(main_memo)).unwrap();
     writer.write_all(&output).unwrap();
 }
