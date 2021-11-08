@@ -1,4 +1,4 @@
-// baekjoon 11054 가장 긴 바이토닉 부분 수열
+// baekjoon 2565 전깃줄
 use std::{fs::File, io::{self, Read, Write, BufWriter}, os::unix::io::FromRawFd, str::from_utf8};
 fn main() {
     let mut writer = BufWriter::new(unsafe {File::from_raw_fd(1)});
@@ -10,33 +10,25 @@ fn main() {
             .collect()
     };
     let mut output = Vec::new();
-    let mut memo: [(usize, usize);1000] = [(0, 0);1000];
-    // right
-    for i in 0..inputs.len() {
-        let max_val_idx = inputs[0..i].iter().enumerate()
-            .filter(|(_, &v)| v < inputs[i])
-            .map(|(idx, _)| idx)
-            .reduce(|a, b| if memo[a].0 > memo[b].0 {a} else {b});
-        match max_val_idx {
-            Some(idx) => memo[i].0 = memo[idx].0 + 1,
-            None => memo[i].0 = 1,
+
+    let mut arr: [usize;501] = [0;501];
+    for slice in inputs.chunks(2) {
+        arr[slice[0]] = slice[1];
+    }
+    let arr: Vec<usize> = arr.iter()
+        .filter(|&x| *x != 0).map(|x| *x).collect();
+    let mut memo: Vec<usize> = vec![0;arr.len()];
+    for i in 0..arr.len() {
+        let mut max_val = 0;
+        for j in 0..i {
+            if arr[i] > arr[j] && memo[j] > max_val {
+                max_val = memo[j];
+            }
         }
+        memo[i] = max_val + 1;
     }
 
-    // reverse
-    for i in (0..inputs.len()).rev() {
-        let slice: Vec<(usize, usize)> = inputs.iter().enumerate()
-            .filter(|(idx, _)| i < *idx).map(|(i, v)| (i, *v)).collect();
-        let max_val_idx = slice.iter().filter(|(_, v)| *v < inputs[i])
-            .map(|(idx, _)| idx)
-            .reduce(|a, b| if memo[*a].1 > memo[*b].1 {a} else {b});
-        match max_val_idx {
-            Some(idx) => memo[i].1 = memo[*idx].1 + 1,
-            None => memo[i].1 = 1,
-        }
-    }
-    let result = memo[..inputs.len()].iter()
-        .map(|(a, b)| a + b - 1).max().unwrap();
+    let result: usize = arr.len() - *(memo.iter().max().unwrap());
     write!(output, "{}", result).unwrap();
     writer.write_all(&output).unwrap();
 }
