@@ -1,14 +1,23 @@
-// baekjoon 1541 읽어버린 괄호
+// baekjoon 13305 주유소
 use std::io;
 fn main() {
-    let mut input = String::new();
-    io::stdin().read_line(&mut input).unwrap();
-    let chunks: Vec<&str> = input.trim().split("-").collect();
-    let input: Vec<Vec<isize>> = chunks.iter()
-        .map(|x| x.split("+")
-            .map(|x| x.parse().unwrap()).collect()
-        ).collect();
-    let result: isize = input[0].iter().sum::<isize>() -
-        input[1..].iter().map(|chunk| chunk.iter().sum::<isize>()).sum::<isize>();
-    print!("{}", result);
+    let mut n = String::new();
+    let mut distances = String::new();
+    let mut prices = String::new();
+    let reader  = io::stdin();
+    reader.read_line(&mut n).unwrap();
+    reader.read_line(&mut distances).unwrap();
+    reader.read_line(&mut prices).unwrap();
+    let distances: Vec<u64> = distances.trim().split_whitespace()
+        .map(|x| x.parse().unwrap()).collect();
+    let prices: Vec<u64> = prices.trim().split_whitespace()
+        .map(|x| x.parse().unwrap()).collect();
+    
+    let mut budget: u64 = 0;
+    let mut minimum_price: u64 = u64::MAX;
+    for i in 0..distances.len() {
+        minimum_price = minimum_price.min(prices[i]);
+        budget += minimum_price * distances[i];
+    }
+    println!("{}", budget);
 }
