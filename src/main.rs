@@ -1,36 +1,14 @@
-// baekjoon 1931 회의실 배정
-use std::{fs::File, io::{self, Read, Write, BufWriter}, os::unix::io::FromRawFd, str::from_utf8};
+// baekjoon 1541 읽어버린 괄호
+use std::io;
 fn main() {
-    let mut writer = BufWriter::new(unsafe {File::from_raw_fd(1)});
-    let mut inputs: Vec<(usize, usize)>  = {
-        let mut input = Vec::new();
-        io::stdin().read_to_end(&mut input).unwrap();
-        from_utf8(&input).unwrap().trim().split("\n")
-            .skip(1).map(|x| {
-                let mut line = x.split_whitespace()
-                    .map(|y| y.parse().unwrap());
-                (line.next().unwrap(), line.next().unwrap())
-            })
-            .collect()
-    };
-    let mut output = Vec::new();
-    inputs.sort_by_key(|x| x.1);
-    inputs.sort_by_key(|x| x.0);
-    let mut count = 0;
-    let mut prev = (0, 0);
-    for i in 0..inputs.len() {
-        if prev.1 <= inputs[i].0 {   // safe
-            count += 1;
-            prev = inputs[i];
-        } else {
-            if prev.1 >= inputs[i].1 {
-                prev = inputs[i];
-            }
-        }
-    }
-    let result = count;
-    write!(output, "{}", result).unwrap();
-    writer.write_all(&output).unwrap();
+    let mut input = String::new();
+    io::stdin().read_line(&mut input).unwrap();
+    let chunks: Vec<&str> = input.trim().split("-").collect();
+    let input: Vec<Vec<isize>> = chunks.iter()
+        .map(|x| x.split("+")
+            .map(|x| x.parse().unwrap()).collect()
+        ).collect();
+    let result: isize = input[0].iter().sum::<isize>() -
+        input[1..].iter().map(|chunk| chunk.iter().sum::<isize>()).sum::<isize>();
+    print!("{}", result);
 }
-
-// inputs[i]를 평가
