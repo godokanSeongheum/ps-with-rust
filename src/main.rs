@@ -1,28 +1,22 @@
-// baekjoon 5086 배수와 약수
+// baekjoon 1037 약수
 use std::io;
 fn main() {
     let stdin = io::stdin();
-    let mut line = String::new();
-    loop {
-        stdin.read_line(&mut line).unwrap();
-        let mut iter = line.trim().split_whitespace()
-            .map(|x| x.parse::<usize>().unwrap());
-        if let Some(a) = iter.next() {
-            if let Some(b) = iter.next() {
-                if a == 0 && b == 0 {
-                    break;
-                }
-                if b % a == 0 {
-                    println!("factor");
-                } else if a % b == 0 {
-                    println!("multiple");
-                } else {
-                    println!("neither");
-                }
-            }
-        } else {
-            break;
+    let mut n = String::new();
+    let mut nums = String::new();
+    stdin.read_line(&mut n).unwrap();
+    stdin.read_line(&mut nums).unwrap();
+    let nums: Vec<usize> = nums.trim().split_whitespace()
+        .map(|x| x.parse().unwrap()).collect();
+    let mut min_val = usize::MAX;
+    let mut max_val = usize::MIN;
+    for num in nums {
+        if num < min_val {
+            min_val = num;
         }
-        line.clear();
+        if num > max_val {
+            max_val = num;
+        }
     }
+    println!("{}", min_val * max_val);
 }
