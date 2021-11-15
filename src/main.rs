@@ -1,10 +1,10 @@
-// baekjoon 2981 검문
+// baekjoon 3036 링
 use std::{fs::File, io::{self, BufWriter, Read, Write}, os::unix::prelude::FromRawFd, str::from_utf8};
 
-fn get_gcd(first: i64, second: i64) -> i64 {
+fn get_gcd(first: usize, second: usize) -> usize {
     let mut a = first;
     let mut b = second;
-    let mut gcd: i64 = i64::MAX;
+    let mut gcd: usize = usize::MAX;
     loop {
         if a < b {
             if b % a == 0 {
@@ -29,21 +29,13 @@ fn main() {
     let mut stdin = io::stdin();
     let mut input = Vec::new();
     stdin.read_to_end(&mut input).unwrap();
-    let input: Vec<i64> = from_utf8(&input).unwrap().trim().split_whitespace()
-        .skip(1).map(|x| x.parse::<i64>().unwrap()).collect();
-    let val = input[0];
-    let mut tmp = input[1];
-    let mut gcd = (tmp - val).abs();
-    for &val in input.iter().skip(2) {
-        gcd = get_gcd((tmp - val).abs(), gcd);
-        tmp = val;
-    }
+    let input: Vec<usize> = from_utf8(&input).unwrap().trim().split_whitespace()
+        .skip(1).map(|x| x.parse::<usize>().unwrap()).collect();
+    let start = input[0];
     let mut output = Vec::new();
-    for num in 2..=gcd / 2 {
-        if gcd % num == 0 {
-            write!(output, "{} ", num).unwrap();
-        }
+    for &num in input.iter().skip(1) {
+        let gcd = get_gcd(start, num);
+        write!(output, "{}/{}\n", start / gcd, num / gcd).unwrap();
     }
-    write!(output, "{}", gcd).unwrap();
     writer.write_all(&output).unwrap();
 }
