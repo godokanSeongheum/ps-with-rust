@@ -1,41 +1,21 @@
-// baekjoon 3036 링
-use std::{fs::File, io::{self, BufWriter, Read, Write}, os::unix::prelude::FromRawFd, str::from_utf8};
-
-fn get_gcd(first: usize, second: usize) -> usize {
-    let mut a = first;
-    let mut b = second;
-    let mut gcd: usize = usize::MAX;
-    loop {
-        if a < b {
-            if b % a == 0 {
-                gcd = a;
-                break;
-            } else {
-                b = b % a;
-            }
-        } else {
-            if a % b == 0 {
-                gcd = b;
-                break;
-            } else {
-                a = a % b;
-            }
-        }
-    }
-    gcd
-}
+// baekjoon 11050 이항 계수 1
 fn main() {
-    let mut writer = BufWriter::new(unsafe {File::from_raw_fd(1)});
-    let mut stdin = io::stdin();
-    let mut input = Vec::new();
-    stdin.read_to_end(&mut input).unwrap();
-    let input: Vec<usize> = from_utf8(&input).unwrap().trim().split_whitespace()
-        .skip(1).map(|x| x.parse::<usize>().unwrap()).collect();
-    let start = input[0];
-    let mut output = Vec::new();
-    for &num in input.iter().skip(1) {
-        let gcd = get_gcd(start, num);
-        write!(output, "{}/{}\n", start / gcd, num / gcd).unwrap();
+    
+    let (a, b) = {
+        let mut input = String::new();
+        std::io::stdin().read_line(&mut input).unwrap();
+        let mut iter = input.trim().split_whitespace()
+            .map(|x| x.parse::<usize>().unwrap());
+        let a = iter.next().unwrap();
+        let b = iter.next().unwrap(); 
+        if a < b { (b, a) }
+        else { (a, b) }
+    };
+    let mut a_acc = 1;
+    let mut b_acc = 1;
+    for _b in 0..b {
+        a_acc *= a - _b;
+        b_acc *= _b + 1;
     }
-    writer.write_all(&output).unwrap();
+    println!("{}", a_acc / b_acc);
 }
