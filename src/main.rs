@@ -1,13 +1,7 @@
-// baekjoon 2609 최대공약수와 최소공배수
-use std::io;
-fn main() {
-    let stdin = io::stdin();
-    let mut ab = String::new();
-    stdin.read_line(&mut ab).unwrap();
-    let mut iter = ab.trim().split_whitespace()
-        .map(|x| x.parse::<usize>().unwrap());
-    let first = iter.next().unwrap();
-    let second = iter.next().unwrap();
+// baekjoon 1934 최소공배수
+use std::{io::{self, Read}, str::from_utf8};
+
+fn get_gcd(first: usize, second: usize) -> usize {
     let mut a = first;
     let mut b = second;
     let mut gcd: usize = usize::MAX;
@@ -28,5 +22,23 @@ fn main() {
             }
         }
     }
-    println!("{}\n{}", gcd, first * second / gcd);
+    gcd
+}
+fn main() {
+    let mut stdin = io::stdin();
+    let mut input = Vec::new();
+    stdin.read_to_end(&mut input).unwrap();
+    let mut iter = from_utf8(&input).unwrap().trim().split_whitespace()
+        .skip(1);
+    loop {
+        let first: usize = match iter.next() {
+            Some(str) => str.parse().unwrap(),
+            None => break,
+        };
+        let second: usize = match iter.next() {
+            Some(str) => str.parse().unwrap(),
+            None => break,
+        };
+        println!("{}", first * second / get_gcd(first, second));
+    }
 }
